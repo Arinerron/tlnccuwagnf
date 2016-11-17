@@ -1,5 +1,6 @@
 const interp = require('./interp')
 const C = require('./constants')
+const equal = require('deep-equal')
 
 export class StringPrim {
   constructor(str) {
@@ -15,7 +16,7 @@ export class StringPrim {
   }
 
   toString() {
-    return this.str
+    return '<String ' + this.str + '>'
   }
 }
 
@@ -59,7 +60,7 @@ export class NumberPrim {
   }
 
   toString() {
-    return this.num
+    return '<Number ' + this.num + '>'
   }
 }
 
@@ -111,38 +112,107 @@ export function toLObject(data) {
   return obj
 }
 
-// Call function --------------------------------------------------------------
+// Tree parsing stuff ---------------------------------------------------------
 
-export function call(fn, args) {
-  return fn['__call__'](args)
+export function searchTreeFor(innerTree, searchFor, reject) {
+  for (let treeNode of innerTree) {
+    if (equal(treeNode, searchFor)) {
+      return true
+    }
+  }
+  for (let treeNode of innerTree.filter(n => n instanceof Array)
+        .filter(n => !(reject ? reject(n) : false))) {
+    if (searchTreeFor(treeNode, searchFor, reject)) {
+      return true
+    }
+  }
+  return false
 }
 
-export function defaultCall(fnToken, args) {
+// Call function --------------------------------------------------------------
+
+export async function call(fn, args) {
+  return await fn['__call__'](args)
+}
+
+export async function defaultCall(fnToken, args) {
   if (fnToken.fn instanceof Function) {
     // it's a javascript function so just call it
-    return fnToken.fn(args.map(
-      arg => interp.evaluateExpression(arg, fnToken.argumentScope)))
+    const argumentValues = []
+    for (let argument of args) {
+      argumentValues.push(await interp.evaluateExpression(
+        argument, fnToken.argumentScope))
+    }
+    let ret = fnToken.fn(argumentValues)
+    if (ret instanceof Promise) {
+      return await ret
+    } else {
+      return ret
+    }
   } else {
-    const scope = Object.assign({}, fnToken.scopeVariables)
+    // Might this function return anything? We can tell by if the `return`
+    // variable is referenced anywhere within the function's code. If so we
+    // need to do all sorts of promise-y things.
+    //
+    // Of course, this is all very hacky, and we would be better off using an
+    // "async {}" asynchronous function syntax...
+    /*
+    const isAsynchronous = searchTreeFor(
+      fnToken.fn, ['VARIABLE_IDENTIFIER', 'return'],
+      // New function literals get a new return, so ignore those
+      n => n[0] === 'FUNCTION_PRIM')
+    console.log('test:', isAsynchronous)
+    */
+    const isAsynchronous = fnToken.isAsynchronous
+
+    // Asynchronous things
+    let resolve
+    const donePromise = new Promise(function(_resolve) {
+      resolve = _resolve
+    })
+
+    // Not asynchronous things
     let returnValue = null
+
+    const scope = Object.assign({}, fnToken.environment.vars)
     scope.return = new Variable(new LFunction(function([val]) {
-      returnValue = val
+      if (isAsynchronous) {
+        resolve(val)
+      } else {
+        returnValue = val
+      }
     }))
     const paramaters = fnToken.paramaterList
     for (let i = 0; i < paramaters.length; i++) {
       const value = args[i]
       const paramater = paramaters[i]
       if (paramater.type === 'normal') {
-        const evaluatedValue = interp.evaluateExpression(value)
+        const evaluatedValue = await interp.evaluateExpression(value)
         scope[paramater.name] = new Variable(evaluatedValue)
       } else if (paramater.type === 'unevaluated') {
-        scope[paramater.name] = new Variable(new LFunction(function() {
-          return interp.evaluateExpression(value, fnToken.argumentScope)
+        scope[paramater.name] = new Variable(new LFunction(async function() {
+          return await interp.evaluateExpression(value, fnToken.argumentScope)
         }))
       }
     }
-    interp.evaluateEachExpression(scope, fnToken.fn)
-    return returnValue
+
+    const environment = new LEnvironment()
+    environment.comment = 'Calling environment'
+    environment.parentEnvironment = fnToken.environment.parentEnvironment
+    Object.assign(environment.vars, scope)
+
+    // Shorthand functions.. these aren't finished! They don't work with the
+    // whole async stuff. I think.
+    if (fnToken.isShorthand) {
+      return await interp.evaluateExpression(fnToken.fn, environment)
+    } else {
+      await interp.evaluateEachExpression(fnToken.fn, environment)
+      if (isAsynchronous) {
+        return await donePromise
+      } else {
+        return returnValue
+      }
+    }
   }
 }
 
@@ -160,7 +230,7 @@ export function get(obj, key) {
 
 export function defaultGet(obj, key) {
   let keyString = toJString(key)
-  if (keyString in obj.data) {
+  if (obj.data.hasOwnProperty(keyString)) {
     return obj.data[keyString]
   } else {
     let constructor = obj['__constructor__']
@@ -260,14 +330,15 @@ export class LArray extends LObject {
 // * use inst.__call__ to call the function (with optional arguments)
 
 export class LFunction extends LObject {
-  constructor(fn) {
+  constructor(fn, asynchronous) {
     super()
     this['__constructor__'] = LFunction
     this.fn = fn
-    this.scopeVariables = null
+    this.environment = null
 
     this.unevaluatedArgs = []
     this.normalArgs = []
+    if (asynchronous) this.isAsynchronous = true
   }
 
   __call__(args) {
@@ -276,23 +347,31 @@ export class LFunction extends LObject {
     return defaultCall(this, args)
   }
 
-  setScopeVariables(scopeVariables) {
-    this.scopeVariables = scopeVariables
-  }
-
   setParamaters(paramaterList) {
     this.paramaterList = paramaterList
   }
 
   toString() {
-    return '<Object Function>'
+    return '<Function>'
   }
 }
 
+let environmentCount = 0
+
 export class LEnvironment {
-  constructor(variables) {
+  constructor() {
     this['__constructor__'] = LEnvironment
-    this.vars = variables
+    this.vars = {}
+    this.breakToEnvironment = null
+    this.comment = ''
+    this.environmentNum = (environmentCount++)
+  }
+
+  addVars(variables) {
+    for (const name of Object.getOwnPropertyNames(variables)) {
+      this.vars[name] = variables[name]
+    }
+    // console.log('Des vars addid :)', Object.getOwnPropertyNames(variables))
   }
 
   __set__(variableName, value) {
@@ -304,7 +383,8 @@ export class LEnvironment {
   }
 
   toString() {
-    return JSON.stringify(Object.keys(this.vars))
+    // return JSON.stringify(Object.keys(this.vars))
+    return `<Environment #${this.environmentNum} "${this.comment}">`
   }
 }
 

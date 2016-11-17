@@ -16,7 +16,7 @@ var JoinRecursive = function(a) {
 
 @builtin "whitespace.ne"
 
-Program -> _ _Program:? _ {% function(d) { return d[1] ? d[1] : [] } %}
+Program -> _ (_Program _):? {% function(d) { return d[1] ? d[1][0] : [] } %}
 _Program -> Command _ CommandSeparator _ _Program {% JoinRecursive %}
           | Command _ CommandSeparator {% function(d) { return [d[0]] } %}
           | Comment _ _Program {% function(d) { return d[2] } %}
@@ -39,8 +39,10 @@ VariableChange -> Identifier _ "->" _ Expression {% function(d) { return [C.VARI
 # General expression
 Expression -> _Expression {% function(d) { return d[0][0] } %}
 _Expression -> CallFunctionExpression
+             | CallFunctionSurroundExpression
              | GetPropertyUsingIdentifierExpression
-             | FunctionExpression
+             | FunctionLiteral
+            #| ShorthandFunctionLiteral
              | StringExpression
              | BooleanExpression
              | NumberExpression
@@ -53,13 +55,16 @@ SetPropertyUsingIdentifier -> Expression _ "." _ Identifier _ ">" _ Expression {
 GetPropertyUsingIdentifierExpression -> Expression _ "." _ Identifier {% function(d) { return [C.GET_PROP_USING_IDENTIFIER, d[0], d[4]] } %}
 
 # Function expression
-FunctionExpression -> "fn" _ ArgumentList _ CodeBlock {% function(d) { return [C.FUNCTION_PRIM, d[2], d[4]] } %}
+FunctionLiteral -> ("async" _):? (ArgumentList _):? CodeBlock {% function(d) { return [C.FUNCTION_PRIM, d[1] ? d[1][0] : [], d[2], !!d[0]] } %}
 ArgumentList -> "(" _ ArgumentListContents:? _ ")" {% function(d) { return d[2] ? d[2] : [] } %}
 ArgumentListContents -> Argument _ "," _ ArgumentListContents {% JoinRecursive %}
                       | Argument
 Argument -> Identifier {% function(d) { return {type: "normal", name: d[0]} } %}
           | "unevaluated" __ Identifier {% function(d) { return {type: "unevaluated", name: d[2]} } %}
 CodeBlock -> "{" Program "}" {% function(d) { return d[1] } %}
+
+# Shorthand function literals. These arent implemented yet!
+ShorthandFunctionLiteral -> ArgumentList _ ":" _ Expression {% function(d) { return [C.SHORTHAND_FUNCTION_PRIM, d[0], d[4]] } %}
 
 # Variable get, really just an Identifier
 VariableGetExpression -> Identifier {% function(d) { return [C.VARIABLE_IDENTIFIER, d[0]] } %}
@@ -71,6 +76,41 @@ PassedArgumentList -> "(" _ PassedArgumentListContents:? _ ")" {% function(d) { 
 PassedArgumentListContents -> Expression _ "," _ PassedArgumentListContents {% JoinRecursive %}
                             | Expression
 
+# Surround function call
+# This is kind of confusing -- here's a paste from my workfile to explain:
+#
+# Implement magic things so that you can do this:
+#
+#   (arg1 fn arg2)
+#
+# as well as this:
+#
+#   fn(arg1, arg2)
+#
+# That makes this possible:
+#
+#   (3 + 4)
+#
+# instead of this:
+#
+#   +(3, 4)
+#
+# Ambiguity as to order of operations is easy -- the new function call syntax
+# must always be wrapped in parenthesis.
+#
+# That means you HAVE to do this:
+#
+#   ((3 * 2) - (4 / 2))
+#
+# instead of this:
+#
+#   (3 * 2 - 4 / 2)
+#
+# ..but hey, it makes the order you're doing things clearer anyways.
+CallFunctionSurroundExpression -> "(" Expression __ Expression __ (Expression __):* Expression _ ")" {% function(d) {
+  return [ C.FUNCTION_CALL, d[3], [d[1]].concat(d[5].map(a => a[0])).concat([d[6]]) ];
+} %}
+
 # Boolean expression
 BooleanExpression -> _BooleanExpression {% function(d) { return ["BOOLEAN_PRIM", d[0][0] === "true"] } %}
 _BooleanExpression -> "true" | "false"
@@ -80,19 +120,21 @@ StringExpression -> _StringExpression {% function(d) { return [C.STRING_PRIM, d[
 _StringExpression -> "\"" StringExpressionDoubleContents "\""
                    | "'" StringExpressionSingleContents "'"
 StringExpressionDoubleContents -> DoubleStringValidCharacter:* {% function(d) { return d[0].join('') } %}
-DoubleStringValidCharacter -> GenericValidCharacter {%
+DoubleStringValidCharacter -> EscapeCode | GenericValidCharacter {%
   function(data, location, reject) {
     if (data[0][0] === '"') return reject;
     else return data[0][0];
   }
 %}
 StringExpressionSingleContents -> SingleStringValidCharacter:* {% function(d) { return d[0].join('') } %}
-SingleStringValidCharacter -> GenericValidCharacter {%
+SingleStringValidCharacter -> EscapeCode | GenericValidCharacter {%
   function(data, location, reject) {
     if (data[0][0] === '\'') return reject;
     else return data[0][0];
   }
 %}
+
+EscapeCode -> "\\" (. | "\n") {% function(d) { return d[1][0]; } %}
 
 # Number expression
 NumberExpression -> _Number {% function(d) { return [C.NUMBER_PRIM, d[0]] } %}
@@ -126,12 +168,17 @@ Identifier -> GenericValidIdentifierCharacter:+ {%
     return reject;
   }
 %}
-GenericValidIdentifierCharacter -> GenericValidCharacter {%
+GenericValidIdentifierCharacter -> . {%
   function(data, location, reject) {
+    //console.log(data[0], location)
     return data[0] && C.SPECIAL_CHARS.indexOf(data[0]) === -1 ? data[0] : reject;
   }
 %}
 
-GenericValidCharacter -> .
+GenericValidCharacter -> . {%
+  function(data, location, reject) {
+    return data[0] === '\\' ? reject : data
+  }
+%}
 
 Comment -> "#" [^#]:* "#" {% function(d) { return [C.COMMENT] } %}

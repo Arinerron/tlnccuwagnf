@@ -3,202 +3,593 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.interp = exports.evaluateEachExpression = exports.evaluateGetPropUsingIdentifier = exports.evaluateExpression = undefined;
 
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+var _getIterator2 = require('babel-runtime/core-js/get-iterator');
 
-exports.evaluateExpression = evaluateExpression;
-exports.evaluateGetPropUsingIdentifier = evaluateGetPropUsingIdentifier;
-exports.evaluateEachExpression = evaluateEachExpression;
-exports.interp = interp;
+var _getIterator3 = _interopRequireDefault(_getIterator2);
+
+var _slicedToArray2 = require('babel-runtime/helpers/slicedToArray');
+
+var _slicedToArray3 = _interopRequireDefault(_slicedToArray2);
+
+var _regenerator = require('babel-runtime/regenerator');
+
+var _regenerator2 = _interopRequireDefault(_regenerator);
+
+var _assign = require('babel-runtime/core-js/object/assign');
+
+var _assign2 = _interopRequireDefault(_assign);
+
+var _keys = require('babel-runtime/core-js/object/keys');
+
+var _keys2 = _interopRequireDefault(_keys);
+
+var _asyncToGenerator2 = require('babel-runtime/helpers/asyncToGenerator');
+
+var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
+
+var evaluateExpression = exports.evaluateExpression = function () {
+  var ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee2(expression, environment) {
+    var returnVal;
+    return _regenerator2.default.wrap(function _callee2$(_context2) {
+      while (1) {
+        switch (_context2.prev = _context2.next) {
+          case 0:
+            _context2.next = 2;
+            return (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee() {
+              var ret, fnExpression, argExpressions, fn, varName, args, takingArgs, name, _ret, _name, valueExpression, value, _name2, _valueExpression, _value, paramaters, code, isAsync, _fn, _paramaters, codeExpression, _fn2, string, bool, number, objExpression, key, _valueExpression2, obj, _value2, _objExpression, _key, _obj, _value3;
+
+              return _regenerator2.default.wrap(function _callee$(_context) {
+                while (1) {
+                  switch (_context.prev = _context.next) {
+                    case 0:
+                      if (!(expression[0] === C.COMMENT)) {
+                        _context.next = 4;
+                        break;
+                      }
+
+                      return _context.abrupt('return');
+
+                    case 4:
+                      if (!(expression instanceof Array && expression.every(function (e) {
+                        return e instanceof Array;
+                      }))) {
+                        _context.next = 9;
+                        break;
+                      }
+
+                      _context.next = 7;
+                      return evaluateEachExpression(expression, environment);
+
+                    case 7:
+                      ret = _context.sent;
+                      return _context.abrupt('return', ret);
+
+                    case 9:
+                      if (!(expression[0] === C.VARIABLE_IDENTIFIER && expression[1] === 'environment')) {
+                        _context.next = 13;
+                        break;
+                      }
+
+                      return _context.abrupt('return', environment);
+
+                    case 13:
+                      if (!(expression[0] === C.FUNCTION_CALL)) {
+                        _context.next = 30;
+                        break;
+                      }
+
+                      // Call a function: "function(arg1, arg2, arg3...)"
+
+                      // Get the function and argument expressions from the expression list.
+                      fnExpression = expression[1];
+                      argExpressions = expression[2];
+
+                      // Evaluate the function expression to get the actual function.
+
+                      _context.next = 18;
+                      return evaluateExpression(fnExpression, environment);
+
+                    case 18:
+                      fn = _context.sent;
+                      varName = fnExpression[1];
+
+                      if (fn instanceof lib.LFunction) {
+                        _context.next = 22;
+                        break;
+                      }
+
+                      throw new Error(chalk.cyan(varName) + ' is not a function');
+
+                    case 22:
+
+                      fn.argumentScope = environment;
+                      args = argExpressions;
+                      takingArgs = fn.paramaterList || [];
+
+                      // We need to discuss this... what's fn.builtin? This also should make sure
+                      // that the called function is not a JS function, because you can't really
+                      // get the number of paramaters from JS functions.
+                      // if (args.length !== takingArgs.length && !fn.builtin) {
+                      //   throw new Error(`Function ${chalk.cyan(varName)} expects ${chalk.bold(takingArgs.length)} arguments, was called with ${chalk.bold(args.length)}`)
+                      // }
+
+                      // Use lib.call to call the function with the evaluated arguments.
+
+                      _context.next = 27;
+                      return lib.call(fn, args);
+
+                    case 27:
+                      return _context.abrupt('return', _context.sent);
+
+                    case 30:
+                      if (!(expression[0] === C.VARIABLE_IDENTIFIER)) {
+                        _context.next = 40;
+                        break;
+                      }
+
+                      // Get a variable: "name"
+
+                      // Get the name from the expression list.
+                      name = expression[1];
+
+                      // Return the variable's value, or, if the variable doesn't exist, throw an
+                      // error.
+
+                      if (!environment.vars.hasOwnProperty(name)) {
+                        _context.next = 37;
+                        break;
+                      }
+
+                      _ret = environment.vars[name].value;
+                      return _context.abrupt('return', _ret);
+
+                    case 37:
+                      throw new Error(chalk.cyan(name) + ' is not defined in ' + (0, _keys2.default)(environment.vars));
+
+                    case 38:
+                      _context.next = 124;
+                      break;
+
+                    case 40:
+                      if (!(expression[0] === C.VARIABLE_ASSIGN)) {
+                        _context.next = 50;
+                        break;
+                      }
+
+                      // Set a variable to a value: "name => value"
+
+                      // Get the name and value expression from the expression list.
+                      _name = expression[1];
+                      valueExpression = expression[2];
+
+                      // console.log(`Setting variable ${name}...`)
+
+                      // Evaluate the value of the variable.
+
+                      _context.next = 45;
+                      return evaluateExpression(valueExpression, environment);
+
+                    case 45:
+                      value = _context.sent;
+
+
+                      // console.log(`..value is ${value}`)
+
+                      // Set the variable in the variables object to a new variable with the
+                      // evaluated value.
+                      environment.vars[_name] = new lib.Variable(value);
+                      return _context.abrupt('return');
+
+                    case 50:
+                      if (!(expression[0] === C.VARIABLE_CHANGE)) {
+                        _context.next = 60;
+                        break;
+                      }
+
+                      // Change a variable to a new value: "name -> newValue"
+
+                      // Get the name and value expression from the expression list.
+                      _name2 = expression[1];
+                      _valueExpression = expression[2];
+
+                      // Evaluate the new value of the variable.
+
+                      _context.next = 55;
+                      return evaluateExpression(_valueExpression, environment);
+
+                    case 55:
+                      _value = _context.sent;
+
+
+                      // Change the value of the already defined variable.
+                      environment.vars[_name2].value = _value;
+                      return _context.abrupt('return');
+
+                    case 60:
+                      if (!(expression[0] === C.FUNCTION_PRIM)) {
+                        _context.next = 74;
+                        break;
+                      }
+
+                      // A function literal: "[async] [(arg1, arg2, arg3...)] { code }"
+
+                      // Get the code and paramaters from the expression list.
+                      paramaters = expression[1];
+                      code = expression[2];
+                      isAsync = expression[3];
+
+                      // Create the function using the given code.
+
+                      _fn = new lib.LFunction(code);
+
+                      // Set the scope variables for the function to a copy of the current
+                      // variables.
+
+                      _fn.environment = new lib.LEnvironment();
+                      _fn.environment.parentEnvironment = environment;
+                      _fn.environment.comment = 'Function environment';
+                      _fn.environment.addVars(environment.vars);
+
+                      // Set the paramaters for the function to the paramaters taken from the
+                      // expression list.
+                      _fn.setParamaters(paramaters);
+
+                      _fn.isAsynchronous = isAsync;
+
+                      // Return the function.
+                      return _context.abrupt('return', _fn);
+
+                    case 74:
+                      if (!(expression[0] === C.SHORTHAND_FUNCTION_PRIM)) {
+                        _context.next = 84;
+                        break;
+                      }
+
+                      // >> OUTDATED CODE <<
+                      _paramaters = expression[1];
+                      codeExpression = expression[2];
+                      _fn2 = new lib.LFunction(codeExpression);
+
+                      _fn2.isShorthand = true;
+                      _fn2.setScopeVariables((0, _assign2.default)({}, environment));
+                      _fn2.setParamaters(_paramaters);
+                      return _context.abrupt('return', _fn2);
+
+                    case 84:
+                      if (!(expression[0] === C.STRING_PRIM)) {
+                        _context.next = 89;
+                        break;
+                      }
+
+                      // String literal: "contents"
+
+                      // Get string from expression list.
+                      string = expression[1];
+
+                      // Convert string to a language-usable string, and return.
+
+                      return _context.abrupt('return', lib.toLString(string));
+
+                    case 89:
+                      if (!(expression[0] === C.BOOLEAN_PRIM)) {
+                        _context.next = 94;
+                        break;
+                      }
+
+                      // Boolean literal: true/false
+
+                      // Get boolean value from expression list.
+                      bool = expression[1];
+
+                      // Convert boolean value to a language-usable boolean, and return.
+
+                      return _context.abrupt('return', lib.toLBoolean(bool));
+
+                    case 94:
+                      if (!(expression[0] === C.NUMBER_PRIM)) {
+                        _context.next = 99;
+                        break;
+                      }
+
+                      // Number primitive: 1, 2, 3, 4, 7.25, -3, etc.
+
+                      // Get number value from expression list.
+                      number = expression[1];
+
+                      // Convert number value to a language-usable number, and return.
+
+                      return _context.abrupt('return', lib.toLNumber(number));
+
+                    case 99:
+                      if (!(expression[0] === C.SET_PROP_USING_IDENTIFIER)) {
+                        _context.next = 113;
+                        break;
+                      }
+
+                      // Set a property of an object using an identifier literal:
+                      // "obj.key > value"
+
+                      // Get object expression, key, and value expression from expression list.
+                      objExpression = expression[1];
+                      key = expression[2];
+                      _valueExpression2 = expression[3];
+
+                      // Evaluate the object and value expressions.
+
+                      _context.next = 105;
+                      return evaluateExpression(objExpression, environment);
+
+                    case 105:
+                      obj = _context.sent;
+                      _context.next = 108;
+                      return evaluateExpression(_valueExpression2, environment);
+
+                    case 108:
+                      _value2 = _context.sent;
+
+
+                      // Use lib.set to set the property of the evaluated object.
+                      lib.set(obj, key, _value2);
+
+                      return _context.abrupt('return');
+
+                    case 113:
+                      if (!(expression[0] === C.GET_PROP_USING_IDENTIFIER)) {
+                        _context.next = 123;
+                        break;
+                      }
+
+                      // Get a property of an object using an identifier literal: "obj.key"
+
+                      // Get object expression and key from the expression list.
+                      _objExpression = expression[1];
+                      _key = expression[2];
+
+                      // Evaluate the object expression.
+
+                      _context.next = 118;
+                      return evaluateExpression(_objExpression, environment);
+
+                    case 118:
+                      _obj = _context.sent;
+
+
+                      // Get the value from lib.get.
+                      _value3 = lib.get(_obj, _key);
+
+                      // Return the gotten value.
+
+                      return _context.abrupt('return', _value3);
+
+                    case 123:
+                      throw new Error('Invalid expression: ' + chalk.cyan(expression[0]));
+
+                    case 124:
+                    case 'end':
+                      return _context.stop();
+                  }
+                }
+              }, _callee, this);
+            }))();
+
+          case 2:
+            returnVal = _context2.sent;
+            return _context2.abrupt('return', returnVal);
+
+          case 4:
+          case 'end':
+            return _context2.stop();
+        }
+      }
+    }, _callee2, this);
+  }));
+  return function evaluateExpression(_x, _x2) {
+    return ref.apply(this, arguments);
+  };
+}();
+
+var evaluateGetPropUsingIdentifier = exports.evaluateGetPropUsingIdentifier = function () {
+  var ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee3(variables, _ref) {
+    var _ref2 = (0, _slicedToArray3.default)(_ref, 3);
+
+    var _ = _ref2[0];
+    var objExpr = _ref2[1];
+    var key = _ref2[2];
+    var obj;
+    return _regenerator2.default.wrap(function _callee3$(_context3) {
+      while (1) {
+        switch (_context3.prev = _context3.next) {
+          case 0:
+            _context3.next = 2;
+            return evaluateExpression(objExpr, variables);
+
+          case 2:
+            obj = _context3.sent;
+            return _context3.abrupt('return', lib.get(obj, key));
+
+          case 4:
+          case 'end':
+            return _context3.stop();
+        }
+      }
+    }, _callee3, this);
+  }));
+  return function evaluateGetPropUsingIdentifier(_x3, _x4) {
+    return ref.apply(this, arguments);
+  };
+}();
+
+var evaluateEachExpression = exports.evaluateEachExpression = function () {
+  var ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee4(expressions, environment) {
+    var checkBreak, results, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, expression;
+
+    return _regenerator2.default.wrap(function _callee4$(_context4) {
+      while (1) {
+        switch (_context4.prev = _context4.next) {
+          case 0:
+            checkBreak = function checkBreak() {
+              var breakEnv = environment.breakToEnvironment;
+              if (breakEnv !== null) {
+                if (breakEnv !== environment.parentEnvironment) {
+                  environment.parentEnvironment.breakToEnvironment = breakEnv;
+                }
+                return true;
+              }
+              return false;
+            };
+
+            if (!checkBreak()) {
+              _context4.next = 3;
+              break;
+            }
+
+            return _context4.abrupt('return', []);
+
+          case 3:
+            results = [];
+            _iteratorNormalCompletion = true;
+            _didIteratorError = false;
+            _iteratorError = undefined;
+            _context4.prev = 7;
+            _iterator = (0, _getIterator3.default)(expressions);
+
+          case 9:
+            if (_iteratorNormalCompletion = (_step = _iterator.next()).done) {
+              _context4.next = 21;
+              break;
+            }
+
+            expression = _step.value;
+            _context4.t0 = results;
+            _context4.next = 14;
+            return evaluateExpression(expression, environment);
+
+          case 14:
+            _context4.t1 = _context4.sent;
+
+            _context4.t0.push.call(_context4.t0, _context4.t1);
+
+            if (!checkBreak()) {
+              _context4.next = 18;
+              break;
+            }
+
+            return _context4.abrupt('break', 21);
+
+          case 18:
+            _iteratorNormalCompletion = true;
+            _context4.next = 9;
+            break;
+
+          case 21:
+            _context4.next = 27;
+            break;
+
+          case 23:
+            _context4.prev = 23;
+            _context4.t2 = _context4['catch'](7);
+            _didIteratorError = true;
+            _iteratorError = _context4.t2;
+
+          case 27:
+            _context4.prev = 27;
+            _context4.prev = 28;
+
+            if (!_iteratorNormalCompletion && _iterator.return) {
+              _iterator.return();
+            }
+
+          case 30:
+            _context4.prev = 30;
+
+            if (!_didIteratorError) {
+              _context4.next = 33;
+              break;
+            }
+
+            throw _iteratorError;
+
+          case 33:
+            return _context4.finish(30);
+
+          case 34:
+            return _context4.finish(27);
+
+          case 35:
+            return _context4.abrupt('return', results);
+
+          case 36:
+          case 'end':
+            return _context4.stop();
+        }
+      }
+    }, _callee4, this, [[7, 23, 27, 35], [28,, 30, 34]]);
+  }));
+  return function evaluateEachExpression(_x5, _x6) {
+    return ref.apply(this, arguments);
+  };
+}();
+
+var interp = exports.interp = function () {
+  var ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee5(ast, dir) {
+    var environment, result;
+    return _regenerator2.default.wrap(function _callee5$(_context5) {
+      while (1) {
+        switch (_context5.prev = _context5.next) {
+          case 0:
+            if (!ast) {
+              _context5.next = 10;
+              break;
+            }
+
+            environment = new lib.LEnvironment();
+
+
+            environment.comment = 'Master environment';
+
+            environment.addVars(builtins.makeBuiltins(dir));
+
+            _context5.next = 6;
+            return evaluateEachExpression(ast, environment);
+
+          case 6:
+            result = _context5.sent;
+            return _context5.abrupt('return', { result: result, environment: environment });
+
+          case 10:
+            throw new Error('Haha, you didn\'t pass me a tree!');
+
+          case 11:
+          case 'end':
+            return _context5.stop();
+        }
+      }
+    }, _callee5, this);
+  }));
+  return function interp(_x7, _x8) {
+    return ref.apply(this, arguments);
+  };
+}();
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 var C = require('./constants');
 var lib = require('./lib');
 var chalk = require('chalk');
 var builtins = require('./builtins');
 
-function evaluateExpression(expression, variables) {
-  if (expression[0] === C.COMMENT) {
-    return;
-  } else if (expression instanceof Array && expression.every(function (e) {
-    return e instanceof Array;
-  })) {
-    return evaluateEachExpression(variables, expression);
-  }if (expression[0] === C.VARIABLE_IDENTIFIER && expression[1] === 'environment') {
-    return new lib.LEnvironment(variables);
-  } else if (expression[0] === C.FUNCTION_CALL) {
-    // Call a function: "function(arg1, arg2, arg3...)"
-
-    // Get the function and argument expressions from the expression list.
-    var fnExpression = expression[1];
-    var argExpressions = expression[2];
-
-    // Evaluate the function expression to get the actual function.
-    var fn = evaluateExpression(fnExpression, variables);
-
-    if (!(fn instanceof lib.LFunction)) {
-      throw new Error('Can\'t call ' + chalk.cyan(fn) + ' because it\'s not a function');
-    }
-
-    /* This code *used* to work but it doesn't any more, because some
-     * parameters of the function could be unevaluated. Now argument evaluation
-     * is done from within the call method of the function.
-     */
-    // Evaluate all of the arguments passed to the function.
-    //const args = argExpressions.map(arg => evaluateExpression(arg, variables));
-    fn.argumentScope = variables;
-    var args = argExpressions;
-
-    // Use lib.call to call the function with the evaluated arguments.
-    return lib.call(fn, args);
-  } else if (expression[0] === C.VARIABLE_IDENTIFIER) {
-    // Get a variable: "name"
-
-    // Get the name from the expression list.
-    var name = expression[1];
-
-    // Return the variable's value, or, if the variable doesn't exist, throw an
-    // error.
-    if (name in variables) {
-      return variables[name].value;
-    } else {
-      // FIXME: Change this message not to include *all* the variables within
-      // the scope; maybe just say "variable (name) not found"?
-      throw 'variable ' + name + ' not in [' + Object.keys(variables) + ']';
-    }
-  } else if (expression[0] === C.VARIABLE_ASSIGN) {
-    // Set a variable to a value: "name => value"
-
-    // Get the name and value expression from the expression list.
-    var _name = expression[1];
-    var valueExpression = expression[2];
-
-    // Evaluate the value of the variable.
-    var value = evaluateExpression(valueExpression, variables);
-
-    // Set the variable in the variables object to a new variable with the
-    // evaluated value.
-    variables[_name] = new lib.Variable(value);
-    return;
-  } else if (expression[0] === C.VARIABLE_CHANGE) {
-    // Change a variable to a new value: "name -> newValue"
-
-    // Get the name and value expression from the expression list.
-    var _name2 = expression[1];
-    var _valueExpression = expression[2];
-
-    // Evaluate the new value of the variable.
-    var _value = evaluateExpression(_valueExpression, variables);
-
-    // Change the value of the already defined variable.
-    variables[_name2].value = _value;
-    return;
-  } else if (expression[0] === C.FUNCTION_PRIM) {
-    // A function literal: "fn(arg1, arg2, arg3...) { code }"
-
-    // Get the code and paramaters from the expression list.
-    var paramaters = expression[1];
-    var code = expression[2];
-
-    // Create the function using the given code.
-    var _fn = new lib.LFunction(code);
-
-    // Set the scope variables for the function to a copy of the current
-    // variables.
-    _fn.setScopeVariables(Object.assign({}, variables));
-
-    // Set the paramaters for the function to the paramaters taken from the
-    // expression list.
-    _fn.setParamaters(paramaters);
-
-    // Return the function.
-    return _fn;
-  } else if (expression[0] === C.STRING_PRIM) {
-    // String literal: "contents"
-
-    // Get string from expression list.
-    var string = expression[1];
-
-    // Convert string to a language-usable string, and return.
-    return lib.toLString(string);
-  } else if (expression[0] === C.BOOLEAN_PRIM) {
-    // Boolean literal: true/false
-
-    // Get boolean value from expression list.
-    var bool = expression[1];
-
-    // Convert boolean value to a language-usable boolean, and return.
-    return lib.toLBoolean(bool);
-  } else if (expression[0] === C.NUMBER_PRIM) {
-    // Number primitive: 1, 2, 3, 4, 7.25, -3, etc.
-
-    // Get number value from expression list.
-    var number = expression[1];
-
-    // Convert number value to a language-usable number, and return.
-    return lib.toLNumber(number);
-  } else if (expression[0] === C.SET_PROP_USING_IDENTIFIER) {
-    // Set a property of an object using an identifier literal:
-    // "obj.key > value"
-
-    // Get object expression, key, and value expression from expression list.
-    var objExpression = expression[1];
-    var key = expression[2];
-    var _valueExpression2 = expression[3];
-
-    // Evaluate the object and value expressions.
-    var obj = evaluateExpression(objExpression, variables);
-    var _value2 = evaluateExpression(_valueExpression2, variables);
-
-    // Use lib.set to set the property of the evaluated object.
-    lib.set(obj, key, _value2);
-    return;
-  } else if (expression[0] === C.GET_PROP_USING_IDENTIFIER) {
-    // Get a property of an object using an identifier literal: "obj.key"
-
-    // Get object expression and key from the expression list.
-    var _objExpression = expression[1];
-    var _key = expression[2];
-
-    // Evaluate the object expression.
-    var _obj = evaluateExpression(_objExpression, variables);
-
-    // Get the value from lib.get.
-    var _value3 = lib.get(_obj, _key);
-
-    // Return the gotten value.
-    return _value3;
-  } else {
-    throw 'Invalid expression type: ' + expression[0];
+if (!console.group) {
+  try {
+    require('console-group').install();
+  } catch (err) {
+    console.group = function (msg) {
+      console.log(chalk.cyan('Group: ' + msg));
+    };
+    console.groupEnd = function () {
+      console.log(chalk.cyan('Group end'));
+    };
   }
 }
-
-function evaluateGetPropUsingIdentifier(variables, _ref) {
-  var _ref2 = _slicedToArray(_ref, 3);
-
-  var _ = _ref2[0];
-  var objExpr = _ref2[1];
-  var key = _ref2[2];
-
-  var obj = evaluateExpression(objExpr, variables);
-  return lib.get(obj, key);
-}
-
-function evaluateEachExpression(variables, expressions) {
-  return expressions.map(function (e) {
-    return evaluateExpression(e, variables);
-  });
-}
-
-function interp(ast, dir) {
-  if (ast) {
-    var variables = {};
-
-    Object.assign(variables, builtins.makeBuiltins(dir));
-
-    var result = evaluateEachExpression(variables, ast);
-
-    return { result: result, variables: variables };
-  } else {
-    console.error('Haha, you didn\'t pass me a tree!');
-  }
-}
-//# sourceMappingURL=data:application/json;base64,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LFlBQVEsS0FBUixDQUFjLG1DQUFkLEVBREs7R0FSUDtDQURLIiwiZmlsZSI6ImludGVycC5qcyIsInNvdXJjZXNDb250ZW50IjpbImNvbnN0IEMgPSByZXF1aXJlKCcuL2NvbnN0YW50cycpXG5jb25zdCBsaWIgPSByZXF1aXJlKCcuL2xpYicpXG5jb25zdCBjaGFsayA9IHJlcXVpcmUoJ2NoYWxrJylcbmNvbnN0IGJ1aWx0aW5zID0gcmVxdWlyZSgnLi9idWlsdGlucycpXG5cbmV4cG9ydCBmdW5jdGlvbiBldmFsdWF0ZUV4cHJlc3Npb24oZXhwcmVzc2lvbiwgdmFyaWFibGVzKSB7XG4gIGlmIChleHByZXNzaW9uWzBdID09PSBDLkNPTU1FTlQpIHtcbiAgICByZXR1cm5cbiAgfSBlbHNlIGlmIChleHByZXNzaW9uIGluc3RhbmNlb2YgQXJyYXkgJiZcbiAgICAgICAgICAgICBleHByZXNzaW9uLmV2ZXJ5KGUgPT4gZSBpbnN0YW5jZW9mIEFycmF5KSkge1xuICAgIHJldHVybiBldmFsdWF0ZUVhY2hFeHByZXNzaW9uKHZhcmlhYmxlcywgZXhwcmVzc2lvbilcbiAgfSBpZiAoZXhwcmVzc2lvblswXSA9PT0gQy5WQVJJQUJMRV9JREVOVElGSUVSICYmIGV4cHJlc3Npb25bMV0gPT09ICdlbnZpcm9ubWVudCcpIHtcbiAgICByZXR1cm4gbmV3IGxpYi5MRW52aXJvbm1lbnQodmFyaWFibGVzKVxuICB9IGVsc2UgaWYgKGV4cHJlc3Npb25bMF0gPT09IEMuRlVOQ1RJT05fQ0FMTCkge1xuICAgIC8vIENhbGwgYSBmdW5jdGlvbjogXCJmdW5jdGlvbihhcmcxLCBhcmcyLCBhcmczLi4uKVwiXG5cbiAgICAvLyBHZXQgdGhlIGZ1bmN0aW9uIGFuZCBhcmd1bWVudCBleHByZXNzaW9ucyBmcm9tIHRoZSBleHByZXNzaW9uIGxpc3QuXG4gICAgY29uc3QgZm5FeHByZXNzaW9uID0gZXhwcmVzc2lvblsxXVxuICAgIGNvbnN0IGFyZ0V4cHJlc3Npb25zID0gZXhwcmVzc2lvblsyXVxuXG4gICAgLy8gRXZhbHVhdGUgdGhlIGZ1bmN0aW9uIGV4cHJlc3Npb24gdG8gZ2V0IHRoZSBhY3R1YWwgZnVuY3Rpb24uXG4gICAgY29uc3QgZm4gPSBldmFsdWF0ZUV4cHJlc3Npb24oZm5FeHByZXNzaW9uLCB2YXJpYWJsZXMpXG5cbiAgICBpZiAoIShmbiBpbnN0YW5jZW9mIGxpYi5MRnVuY3Rpb24pKSB7XG4gICAgICB0aHJvdyBuZXcgRXJyb3IoYENhbid0IGNhbGwgJHtjaGFsay5jeWFuKGZuKX0gYmVjYXVzZSBpdCdzIG5vdCBhIGZ1bmN0aW9uYClcbiAgICB9XG5cbiAgICAvKiBUaGlzIGNvZGUgKnVzZWQqIHRvIHdvcmsgYnV0IGl0IGRvZXNuJ3QgYW55IG1vcmUsIGJlY2F1c2Ugc29tZVxuICAgICAqIHBhcmFtZXRlcnMgb2YgdGhlIGZ1bmN0aW9uIGNvdWxkIGJlIHVuZXZhbHVhdGVkLiBOb3cgYXJndW1lbnQgZXZhbHVhdGlvblxuICAgICAqIGlzIGRvbmUgZnJvbSB3aXRoaW4gdGhlIGNhbGwgbWV0aG9kIG9mIHRoZSBmdW5jdGlvbi5cbiAgICAgKi9cbiAgICAvLyBFdmFsdWF0ZSBhbGwgb2YgdGhlIGFyZ3VtZW50cyBwYXNzZWQgdG8gdGhlIGZ1bmN0aW9uLlxuICAgIC8vY29uc3QgYXJncyA9IGFyZ0V4cHJlc3Npb25zLm1hcChhcmcgPT4gZXZhbHVhdGVFeHByZXNzaW9uKGFyZywgdmFyaWFibGVzKSk7XG4gICAgZm4uYXJndW1lbnRTY29wZSA9IHZhcmlhYmxlc1xuICAgIGNvbnN0IGFyZ3MgPSBhcmdFeHByZXNzaW9uc1xuXG4gICAgLy8gVXNlIGxpYi5jYWxsIHRvIGNhbGwgdGhlIGZ1bmN0aW9uIHdpdGggdGhlIGV2YWx1YXRlZCBhcmd1bWVudHMuXG4gICAgcmV0dXJuIGxpYi5jYWxsKGZuLCBhcmdzKVxuICB9IGVsc2UgaWYgKGV4cHJlc3Npb25bMF0gPT09IEMuVkFSSUFCTEVfSURFTlRJRklFUikge1xuICAgIC8vIEdldCBhIHZhcmlhYmxlOiBcIm5hbWVcIlxuXG4gICAgLy8gR2V0IHRoZSBuYW1lIGZyb20gdGhlIGV4cHJlc3Npb24gbGlzdC5cbiAgICBjb25zdCBuYW1lID0gZXhwcmVzc2lvblsxXVxuXG4gICAgLy8gUmV0dXJuIHRoZSB2YXJpYWJsZSdzIHZhbHVlLCBvciwgaWYgdGhlIHZhcmlhYmxlIGRvZXNuJ3QgZXhpc3QsIHRocm93IGFuXG4gICAgLy8gZXJyb3IuXG4gICAgaWYgKG5hbWUgaW4gdmFyaWFibGVzKSB7XG4gICAgICByZXR1cm4gdmFyaWFibGVzW25hbWVdLnZhbHVlXG4gICAgfSBlbHNlIHtcbiAgICAgIC8vIEZJWE1FOiBDaGFuZ2UgdGhpcyBtZXNzYWdlIG5vdCB0byBpbmNsdWRlICphbGwqIHRoZSB2YXJpYWJsZXMgd2l0aGluXG4gICAgICAvLyB0aGUgc2NvcGU7IG1heWJlIGp1c3Qgc2F5IFwidmFyaWFibGUgKG5hbWUpIG5vdCBmb3VuZFwiP1xuICAgICAgdGhyb3cgYHZhcmlhYmxlICR7bmFtZX0gbm90IGluIFske09iamVjdC5rZXlzKHZhcmlhYmxlcyl9XWBcbiAgICB9XG4gIH0gZWxzZSBpZiAoZXhwcmVzc2lvblswXSA9PT0gQy5WQVJJQUJMRV9BU1NJR04pIHtcbiAgICAvLyBTZXQgYSB2YXJpYWJsZSB0byBhIHZhbHVlOiBcIm5hbWUgPT4gdmFsdWVcIlxuXG4gICAgLy8gR2V0IHRoZSBuYW1lIGFuZCB2YWx1ZSBleHByZXNzaW9uIGZyb20gdGhlIGV4cHJlc3Npb24gbGlzdC5cbiAgICBjb25zdCBuYW1lID0gZXhwcmVzc2lvblsxXVxuICAgIGNvbnN0IHZhbHVlRXhwcmVzc2lvbiA9IGV4cHJlc3Npb25bMl1cblxuICAgIC8vIEV2YWx1YXRlIHRoZSB2YWx1ZSBvZiB0aGUgdmFyaWFibGUuXG4gICAgY29uc3QgdmFsdWUgPSBldmFsdWF0ZUV4cHJlc3Npb24odmFsdWVFeHByZXNzaW9uLCB2YXJpYWJsZXMpXG5cbiAgICAvLyBTZXQgdGhlIHZhcmlhYmxlIGluIHRoZSB2YXJpYWJsZXMgb2JqZWN0IHRvIGEgbmV3IHZhcmlhYmxlIHdpdGggdGhlXG4gICAgLy8gZXZhbHVhdGVkIHZhbHVlLlxuICAgIHZhcmlhYmxlc1tuYW1lXSA9IG5ldyBsaWIuVmFyaWFibGUodmFsdWUpXG4gICAgcmV0dXJuXG4gIH0gZWxzZSBpZiAoZXhwcmVzc2lvblswXSA9PT0gQy5WQVJJQUJMRV9DSEFOR0UpIHtcbiAgICAvLyBDaGFuZ2UgYSB2YXJpYWJsZSB0byBhIG5ldyB2YWx1ZTogXCJuYW1lIC0+IG5ld1ZhbHVlXCJcblxuICAgIC8vIEdldCB0aGUgbmFtZSBhbmQgdmFsdWUgZXhwcmVzc2lvbiBmcm9tIHRoZSBleHByZXNzaW9uIGxpc3QuXG4gICAgY29uc3QgbmFtZSA9IGV4cHJlc3Npb25bMV1cbiAgICBjb25zdCB2YWx1ZUV4cHJlc3Npb24gPSBleHByZXNzaW9uWzJdXG5cbiAgICAvLyBFdmFsdWF0ZSB0aGUgbmV3IHZhbHVlIG9mIHRoZSB2YXJpYWJsZS5cbiAgICBjb25zdCB2YWx1ZSA9IGV2YWx1YXRlRXhwcmVzc2lvbih2YWx1ZUV4cHJlc3Npb24sIHZhcmlhYmxlcylcblxuICAgIC8vIENoYW5nZSB0aGUgdmFsdWUgb2YgdGhlIGFscmVhZHkgZGVmaW5lZCB2YXJpYWJsZS5cbiAgICB2YXJpYWJsZXNbbmFtZV0udmFsdWUgPSB2YWx1ZVxuICAgIHJldHVyblxuICB9IGVsc2UgaWYgKGV4cHJlc3Npb25bMF0gPT09IEMuRlVOQ1RJT05fUFJJTSkge1xuICAgIC8vIEEgZnVuY3Rpb24gbGl0ZXJhbDogXCJmbihhcmcxLCBhcmcyLCBhcmczLi4uKSB7IGNvZGUgfVwiXG5cbiAgICAvLyBHZXQgdGhlIGNvZGUgYW5kIHBhcmFtYXRlcnMgZnJvbSB0aGUgZXhwcmVzc2lvbiBsaXN0LlxuICAgIGNvbnN0IHBhcmFtYXRlcnMgPSBleHByZXNzaW9uWzFdXG4gICAgY29uc3QgY29kZSA9IGV4cHJlc3Npb25bMl1cblxuICAgIC8vIENyZWF0ZSB0aGUgZnVuY3Rpb24gdXNpbmcgdGhlIGdpdmVuIGNvZGUuXG4gICAgY29uc3QgZm4gPSBuZXcgbGliLkxGdW5jdGlvbihjb2RlKVxuXG4gICAgLy8gU2V0IHRoZSBzY29wZSB2YXJpYWJsZXMgZm9yIHRoZSBmdW5jdGlvbiB0byBhIGNvcHkgb2YgdGhlIGN1cnJlbnRcbiAgICAvLyB2YXJpYWJsZXMuXG4gICAgZm4uc2V0U2NvcGVWYXJpYWJsZXMoT2JqZWN0LmFzc2lnbih7fSwgdmFyaWFibGVzKSlcblxuICAgIC8vIFNldCB0aGUgcGFyYW1hdGVycyBmb3IgdGhlIGZ1bmN0aW9uIHRvIHRoZSBwYXJhbWF0ZXJzIHRha2VuIGZyb20gdGhlXG4gICAgLy8gZXhwcmVzc2lvbiBsaXN0LlxuICAgIGZuLnNldFBhcmFtYXRlcnMocGFyYW1hdGVycylcblxuICAgIC8vIFJldHVybiB0aGUgZnVuY3Rpb24uXG4gICAgcmV0dXJuIGZuXG4gIH0gZWxzZSBpZiAoZXhwcmVzc2lvblswXSA9PT0gQy5TVFJJTkdfUFJJTSkge1xuICAgIC8vIFN0cmluZyBsaXRlcmFsOiBcImNvbnRlbnRzXCJcblxuICAgIC8vIEdldCBzdHJpbmcgZnJvbSBleHByZXNzaW9uIGxpc3QuXG4gICAgY29uc3Qgc3RyaW5nID0gZXhwcmVzc2lvblsxXVxuXG4gICAgLy8gQ29udmVydCBzdHJpbmcgdG8gYSBsYW5ndWFnZS11c2FibGUgc3RyaW5nLCBhbmQgcmV0dXJuLlxuICAgIHJldHVybiBsaWIudG9MU3RyaW5nKHN0cmluZylcbiAgfSBlbHNlIGlmIChleHByZXNzaW9uWzBdID09PSBDLkJPT0xFQU5fUFJJTSkge1xuICAgIC8vIEJvb2xlYW4gbGl0ZXJhbDogdHJ1ZS9mYWxzZVxuXG4gICAgLy8gR2V0IGJvb2xlYW4gdmFsdWUgZnJvbSBleHByZXNzaW9uIGxpc3QuXG4gICAgY29uc3QgYm9vbCA9IGV4cHJlc3Npb25bMV1cblxuICAgIC8vIENvbnZlcnQgYm9vbGVhbiB2YWx1ZSB0byBhIGxhbmd1YWdlLXVzYWJsZSBib29sZWFuLCBhbmQgcmV0dXJuLlxuICAgIHJldHVybiBsaWIudG9MQm9vbGVhbihib29sKVxuICB9IGVsc2UgaWYgKGV4cHJlc3Npb25bMF0gPT09IEMuTlVNQkVSX1BSSU0pIHtcbiAgICAvLyBOdW1iZXIgcHJpbWl0aXZlOiAxLCAyLCAzLCA0LCA3LjI1LCAtMywgZXRjLlxuXG4gICAgLy8gR2V0IG51bWJlciB2YWx1ZSBmcm9tIGV4cHJlc3Npb24gbGlzdC5cbiAgICBjb25zdCBudW1iZXIgPSBleHByZXNzaW9uWzFdXG5cbiAgICAvLyBDb252ZXJ0IG51bWJlciB2YWx1ZSB0byBhIGxhbmd1YWdlLXVzYWJsZSBudW1iZXIsIGFuZCByZXR1cm4uXG4gICAgcmV0dXJuIGxpYi50b0xOdW1iZXIobnVtYmVyKVxuICB9IGVsc2UgaWYgKGV4cHJlc3Npb25bMF0gPT09IEMuU0VUX1BST1BfVVNJTkdfSURFTlRJRklFUikge1xuICAgIC8vIFNldCBhIHByb3BlcnR5IG9mIGFuIG9iamVjdCB1c2luZyBhbiBpZGVudGlmaWVyIGxpdGVyYWw6XG4gICAgLy8gXCJvYmoua2V5ID4gdmFsdWVcIlxuXG4gICAgLy8gR2V0IG9iamVjdCBleHByZXNzaW9uLCBrZXksIGFuZCB2YWx1ZSBleHByZXNzaW9uIGZyb20gZXhwcmVzc2lvbiBsaXN0LlxuICAgIGNvbnN0IG9iakV4cHJlc3Npb24gPSBleHByZXNzaW9uWzFdXG4gICAgY29uc3Qga2V5ID0gZXhwcmVzc2lvblsyXVxuICAgIGNvbnN0IHZhbHVlRXhwcmVzc2lvbiA9IGV4cHJlc3Npb25bM11cblxuICAgIC8vIEV2YWx1YXRlIHRoZSBvYmplY3QgYW5kIHZhbHVlIGV4cHJlc3Npb25zLlxuICAgIGNvbnN0IG9iaiA9IGV2YWx1YXRlRXhwcmVzc2lvbihvYmpFeHByZXNzaW9uLCB2YXJpYWJsZXMpXG4gICAgY29uc3QgdmFsdWUgPSBldmFsdWF0ZUV4cHJlc3Npb24odmFsdWVFeHByZXNzaW9uLCB2YXJpYWJsZXMpXG5cbiAgICAvLyBVc2UgbGliLnNldCB0byBzZXQgdGhlIHByb3BlcnR5IG9mIHRoZSBldmFsdWF0ZWQgb2JqZWN0LlxuICAgIGxpYi5zZXQob2JqLCBrZXksIHZhbHVlKVxuICAgIHJldHVyblxuICB9IGVsc2UgaWYgKGV4cHJlc3Npb25bMF0gPT09IEMuR0VUX1BST1BfVVNJTkdfSURFTlRJRklFUikge1xuICAgIC8vIEdldCBhIHByb3BlcnR5IG9mIGFuIG9iamVjdCB1c2luZyBhbiBpZGVudGlmaWVyIGxpdGVyYWw6IFwib2JqLmtleVwiXG5cbiAgICAvLyBHZXQgb2JqZWN0IGV4cHJlc3Npb24gYW5kIGtleSBmcm9tIHRoZSBleHByZXNzaW9uIGxpc3QuXG4gICAgY29uc3Qgb2JqRXhwcmVzc2lvbiA9IGV4cHJlc3Npb25bMV1cbiAgICBjb25zdCBrZXkgPSBleHByZXNzaW9uWzJdXG5cbiAgICAvLyBFdmFsdWF0ZSB0aGUgb2JqZWN0IGV4cHJlc3Npb24uXG4gICAgY29uc3Qgb2JqID0gZXZhbHVhdGVFeHByZXNzaW9uKG9iakV4cHJlc3Npb24sIHZhcmlhYmxlcylcblxuICAgIC8vIEdldCB0aGUgdmFsdWUgZnJvbSBsaWIuZ2V0LlxuICAgIGNvbnN0IHZhbHVlID0gbGliLmdldChvYmosIGtleSlcblxuICAgIC8vIFJldHVybiB0aGUgZ290dGVuIHZhbHVlLlxuICAgIHJldHVybiB2YWx1ZVxuICB9IGVsc2Uge1xuICAgIHRocm93IGBJbnZhbGlkIGV4cHJlc3Npb24gdHlwZTogJHtleHByZXNzaW9uWzBdfWBcbiAgfVxufVxuXG5leHBvcnQgZnVuY3Rpb24gZXZhbHVhdGVHZXRQcm9wVXNpbmdJZGVudGlmaWVyKHZhcmlhYmxlcywgW18sIG9iakV4cHIsIGtleV0pIHtcbiAgbGV0IG9iaiA9IGV2YWx1YXRlRXhwcmVzc2lvbihvYmpFeHByLCB2YXJpYWJsZXMpXG4gIHJldHVybiBsaWIuZ2V0KG9iaiwga2V5KVxufVxuXG5leHBvcnQgZnVuY3Rpb24gZXZhbHVhdGVFYWNoRXhwcmVzc2lvbih2YXJpYWJsZXMsIGV4cHJlc3Npb25zKSB7XG4gIHJldHVybiBleHByZXNzaW9ucy5tYXAoZSA9PiBldmFsdWF0ZUV4cHJlc3Npb24oZSwgdmFyaWFibGVzKSlcbn1cblxuZXhwb3J0IGZ1bmN0aW9uIGludGVycChhc3QsIGRpcikge1xuICBpZiAoYXN0KSB7XG4gICAgbGV0IHZhcmlhYmxlcyA9IHt9XG5cbiAgICBPYmplY3QuYXNzaWduKHZhcmlhYmxlcywgYnVpbHRpbnMubWFrZUJ1aWx0aW5zKGRpcikpXG5cbiAgICBsZXQgcmVzdWx0ID0gZXZhbHVhdGVFYWNoRXhwcmVzc2lvbih2YXJpYWJsZXMsIGFzdClcblxuICAgIHJldHVybiB7IHJlc3VsdCwgdmFyaWFibGVzIH1cbiAgfSBlbHNlIHtcbiAgICBjb25zb2xlLmVycm9yKCdIYWhhLCB5b3UgZGlkblxcJ3QgcGFzcyBtZSBhIHRyZWUhJylcbiAgfVxufVxuIl19
+//# sourceMappingURL=interp.js.map

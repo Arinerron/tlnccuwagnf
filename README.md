@@ -1,7 +1,7 @@
 ## The Language Nobody Could Come Up With A Good Name For
 *Pronounced "Tul-un-qweh-wag-nuf", call it Tulun for short.*
 
-[![Join the chat at https://gitter.im/liam4/tlnccupwagf](https://badges.gitter.im/liam4/tlnccupwagf.svg)](https://gitter.im/liam4/nearley-test?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Build Status](https://travis-ci.org/liam4/tlnccuwagnf.svg?branch=master)](https://travis-ci.org/liam4/tlnccuwagnf) [![Join the chat at https://gitter.im/liam4/tlnccupwagf](https://badges.gitter.im/liam4/tlnccupwagf.svg)](https://gitter.im/liam4/nearley-test?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 This is just another programming language we're making for fun. It's mildly based on [another project @liam4 made, PLT](https://github.com/liam4/programming-language-thing), and JavaScript.
 
@@ -16,21 +16,16 @@ It doesn't make sense. Please ignore the fact that it doesn't make sense? Also, 
 # installation
 npm install -g tlnccuwagnf
 
-# usage
-tulun <file.tul>
+# usage, see
+tulun help
 ```
 
 ## Syntax Highlighting
+**Atom**: Install the [language-tulun](https://atom.io/packages/language-tulun) package.
 
-**Atom**
-If you use Atom as your main editor, then it's worth symlinking/copying `(this repo)/atom-language-tulun/` as a package in your Atom installation to provide syntax highlighting for `.tul` files. If you use a UNIX OS _(e.g. not windows)_ then you _should_ be able to just run this command below to syntax highlight `.tul` files in Atom (provided you've cloned this git repo).
-```sh
-ln -s tlnccuwagnf/atom-language-tulun ~/.atom/packages/language-tulun
-```
-If you can't be bothered to, just use the JavaScript highlighting.
+**Other Editors**: Tulun has a similar syntax to JavaScript, so just use your editor's JS highlighting instead.
 
-**Other Editors**
-Tulun has a similar syntax to JavaScript, so just use your editor's JS highlighting instead.
+## [Documentation](https://github.com/liam4/tlnccuwagnf/wiki/)
 
 ## Examples
 
@@ -70,13 +65,13 @@ if(true, fn() {
 });
 ```
 
-## Control structures and syntax and such
+## [Syntax](https://github.com/liam4/tlnccuwagnf/wiki/Syntax)
 
 There are basically no control structures. In one command (each separated by semicolons) you can do the following:
 
 * Assign or change a variable. (`variable_name => value`, `variable_name -> new_value`)
 * Evaluate an expression.
-  * Call a function (`function(arg1, arg2, arg3)`)
+  * [Call a function](wiki/Syntax#builtins) (`function(arg1, arg2, arg3)`)
   * Get a variable (`variable_name`)
   * Do something related to object properties
   * Evaluate a special token, like a string, number or function
@@ -90,18 +85,18 @@ if(true_or_false, call_for_true[, call_for_false]);
 Here's an example of a program using all the things we showed above. Please excuse Liam's terrible ASCII labelling.
 
 ```python
-# Variable assign..                             #
+# Variable assign.                              #
 #  v--- Variable identifier                     #
-#  v    vvvv--- A boolean literal.              #
+#  |    vvvv--- A boolean literal.              #
    x => true;
 
-#  v--- Get a variable using identifier "if",   #
-#  |    this is built-in so all programs will   #
-#  |    automatically have "if" as a variable.  #
-#  |  v--- Get a variable using identifier "x", #
-#  |  |    which we assigned earlier.           #
-#  |  |  vvvvvv--- A function literal.          #
-   if(x, fn() {
+#  vv-- Get a variable using identifier "if",   #
+#  ||  this is built-in so all programs will    #
+#  ||  automatically have "if" as a variable.   #
+#  || v--- Get a variable using identifier "x", #
+#  || |    which we assigned earlier.           #
+#  || |  v--- A function literal.               #
+   if(x, {
 
 #    vvvvv--- Get a variable using identifier   #
 #    |||||    "print", which is also built-in.  #

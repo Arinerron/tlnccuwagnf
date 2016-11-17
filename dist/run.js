@@ -3,25 +3,95 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.run = run;
+exports.run = undefined;
+
+var _regenerator = require('babel-runtime/regenerator');
+
+var _regenerator2 = _interopRequireDefault(_regenerator);
+
+var _stringify = require('babel-runtime/core-js/json/stringify');
+
+var _stringify2 = _interopRequireDefault(_stringify);
+
+var _asyncToGenerator2 = require('babel-runtime/helpers/asyncToGenerator');
+
+var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
+
+var run = exports.run = function () {
+  var ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(code, dir) {
+    var parser, asts, line, lines, i, char, ln, _escape, result;
+
+    return _regenerator2.default.wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            parser = new nearley.Parser(grammar.ParserRules, grammar.ParserStart);
+            asts = void 0;
+            _context.prev = 2;
+
+            asts = parser.feed(code).results;
+            _context.next = 17;
+            break;
+
+          case 6:
+            _context.prev = 6;
+            _context.t0 = _context['catch'](2);
+
+            // there's been a syntax error :(
+
+            line = 1;
+            lines = code.split('\n');
+
+            lines.unshift('');
+            for (i = 0; i < _context.t0.offset; i++) {
+              char = code[i];
+
+              if (char == '\n') line++;
+            }
+
+            ln = lines[line];
+
+
+            if (line - 1 > 0) console.log(chalk.bold(line - 1), lines[line - 1]);
+            if (line) console.log(chalk.bold(line), chalk.red(ln));
+            if (line + 1 < lines.length) console.log(chalk.bold(line + 1), lines[line + 1]);
+            throw new Error(chalk.red('\nSyntax Error at ' + chalk.cyan('line ' + line) + '!'));
+
+          case 17:
+
+            if (asts.length > 1) {
+              console.warn(chalk.red.bold('!! AMBIGUOUS SYNTAX !!'));
+              _escape = String.fromCharCode(27);
+
+              asts.forEach(function (ast, i) {
+                console.warn((0, _stringify2.default)(ast, null, 0));
+                console.warn('\n----------------------------\n');
+              }) - console.warn(chalk.yellow('\nA total of ' + chalk.cyan(asts.length) + ' ASTs were generated.\nPlease report this on the official issue tracker:\nhttps://github.com/liam4/tlnccuwagnf/issues\nUsing first AST.\n'));
+            }
+
+            _context.next = 20;
+            return interp.interp(asts[0], dir);
+
+          case 20:
+            result = _context.sent;
+            return _context.abrupt('return', result);
+
+          case 22:
+          case 'end':
+            return _context.stop();
+        }
+      }
+    }, _callee, this, [[2, 6]]);
+  }));
+  return function run(_x, _x2) {
+    return ref.apply(this, arguments);
+  };
+}();
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 var nearley = require('nearley');
 var grammar = require('./grammar');
 var interp = require('./interp');
-
-function run(code, dir) {
-  var parser = new nearley.Parser(grammar.ParserRules, grammar.ParserStart);
-  var asts = parser.feed(code).results;
-
-  if (asts.length > 1) {
-    console.warn('!! AMBIGUOUS SYNTAX !!');
-    var _escape = String.fromCharCode(27);
-    asts.forEach(function (ast, i) {
-      console.warn(JSON.stringify(ast, null, 0));
-      console.warn('\n----------------------------\n');
-    }) - console.warn('\nA total of ' + asts.length + ' ASTs were generated.\nPlease report this on the official issue tracker:\nhttps://github.com/liam4/tlnccuwagnf/issues\nUsing first AST.\n');
-  }
-
-  var result = interp.interp(asts[0], dir);
-  return result;
-}
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInJ1bi5qcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7OztRQUlnQjtBQUpoQixJQUFNLFVBQVUsUUFBUSxTQUFSLENBQVY7QUFDTixJQUFNLFVBQVUsUUFBUSxXQUFSLENBQVY7QUFDTixJQUFNLFNBQVMsUUFBUSxVQUFSLENBQVQ7O0FBRUMsU0FBUyxHQUFULENBQWEsSUFBYixFQUFtQixHQUFuQixFQUF3QjtBQUM3QixNQUFJLFNBQVMsSUFBSSxRQUFRLE1BQVIsQ0FBZSxRQUFRLFdBQVIsRUFBcUIsUUFBUSxXQUFSLENBQWpELENBRHlCO0FBRTdCLE1BQUksT0FBTyxPQUFPLElBQVAsQ0FBWSxJQUFaLEVBQWtCLE9BQWxCLENBRmtCOztBQUk3QixNQUFJLEtBQUssTUFBTCxHQUFjLENBQWQsRUFBaUI7QUFDbkIsWUFBUSxJQUFSLENBQWEsd0JBQWIsRUFEbUI7QUFFbkIsUUFBSSxVQUFTLE9BQU8sWUFBUCxDQUFvQixFQUFwQixDQUFULENBRmU7QUFHbkIsU0FBSyxPQUFMLENBQWEsVUFBUyxHQUFULEVBQWMsQ0FBZCxFQUFpQjtBQUM1QixjQUFRLElBQVIsQ0FBYSxLQUFLLFNBQUwsQ0FBZSxHQUFmLEVBQW9CLElBQXBCLEVBQTBCLENBQTFCLENBQWIsRUFENEI7QUFFNUIsY0FBUSxJQUFSLENBQWEsa0NBQWIsRUFGNEI7S0FBakIsQ0FBYixHQUlBLFFBQVEsSUFBUixtQkFDUyxLQUFLLE1BQUwsOElBRFQsQ0FKQSxDQUhtQjtHQUFyQjs7QUFlQSxNQUFJLFNBQVMsT0FBTyxNQUFQLENBQWMsS0FBSyxDQUFMLENBQWQsRUFBdUIsR0FBdkIsQ0FBVCxDQW5CeUI7QUFvQjdCLFNBQU8sTUFBUCxDQXBCNkI7Q0FBeEIiLCJmaWxlIjoicnVuLmpzIiwic291cmNlc0NvbnRlbnQiOlsiY29uc3QgbmVhcmxleSA9IHJlcXVpcmUoJ25lYXJsZXknKVxuY29uc3QgZ3JhbW1hciA9IHJlcXVpcmUoJy4vZ3JhbW1hcicpXG5jb25zdCBpbnRlcnAgPSByZXF1aXJlKCcuL2ludGVycCcpXG5cbmV4cG9ydCBmdW5jdGlvbiBydW4oY29kZSwgZGlyKSB7XG4gIGxldCBwYXJzZXIgPSBuZXcgbmVhcmxleS5QYXJzZXIoZ3JhbW1hci5QYXJzZXJSdWxlcywgZ3JhbW1hci5QYXJzZXJTdGFydClcbiAgbGV0IGFzdHMgPSBwYXJzZXIuZmVlZChjb2RlKS5yZXN1bHRzXG5cbiAgaWYgKGFzdHMubGVuZ3RoID4gMSkge1xuICAgIGNvbnNvbGUud2FybignISEgQU1CSUdVT1VTIFNZTlRBWCAhIScpXG4gICAgbGV0IGVzY2FwZSA9IFN0cmluZy5mcm9tQ2hhckNvZGUoMjcpXG4gICAgYXN0cy5mb3JFYWNoKGZ1bmN0aW9uKGFzdCwgaSkge1xuICAgICAgY29uc29sZS53YXJuKEpTT04uc3RyaW5naWZ5KGFzdCwgbnVsbCwgMCkpXG4gICAgICBjb25zb2xlLndhcm4oJ1xcbi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS1cXG4nKVxuICAgIH0pLVxuICAgIGNvbnNvbGUud2FybihgXG5BIHRvdGFsIG9mICR7YXN0cy5sZW5ndGh9IEFTVHMgd2VyZSBnZW5lcmF0ZWQuXG5QbGVhc2UgcmVwb3J0IHRoaXMgb24gdGhlIG9mZmljaWFsIGlzc3VlIHRyYWNrZXI6XG5odHRwczovL2dpdGh1Yi5jb20vbGlhbTQvdGxuY2N1d2FnbmYvaXNzdWVzXG5Vc2luZyBmaXJzdCBBU1QuXG5gKVxuICB9XG5cbiAgbGV0IHJlc3VsdCA9IGludGVycC5pbnRlcnAoYXN0c1swXSwgZGlyKVxuICByZXR1cm4gcmVzdWx0XG59XG4iXX0=
+var chalk = require('chalk');
+//# sourceMappingURL=run.js.map
